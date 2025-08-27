@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home Loan ROI Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 py-8">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">Home Loan ROI Calculator</h1>
+        <form id="roi-form" class="space-y-6">
+            <!-- City Name -->
+            <div>
+                <label for="city" class="block text-sm font-medium text-gray-700">City Name</label>
+                <input type="text" id="city" name="city" placeholder="Enter city name" class="mt-1 block w-full p-3 border border-gray-300 rounded-md" required>
+            </div>
+            <!-- City Tier (auto) -->
+            <div>
+                <label for="city-tier" class="block text-sm font-medium text-gray-700">City Tier</label>
+                <input type="text" id="city-tier" name="city-tier" readonly placeholder="Auto detected" class="mt-1 block w-full p-3 border border-gray-300 rounded-md bg-gray-100">
+            </div>
+            <!-- Loan Amount -->
+            <div>
+                <label for="loan-amount" class="block text-sm font-medium text-gray-700">Loan Amount (₹)</label>
+                <input type="number" id="loan-amount" name="loan-amount" placeholder="Enter loan amount" class="mt-1 block w-full p-3 border border-gray-300 rounded-md" required>
+            </div>
+            <!-- Loan Parameter (auto) -->
+            <div>
+                <label for="loan-param" class="block text-sm font-medium text-gray-700">Loan Parameter</label>
+                <input type="text" id="loan-param" name="loan-param" readonly placeholder="Auto detected" class="mt-1 block w-full p-3 border border-gray-300 rounded-md bg-gray-100">
+            </div>
+            <!-- Collateral Grade -->
+            <div>
+                <label for="collateral-grade" class="block text-sm font-medium text-gray-700">Collateral Grade</label>
+                <select id="collateral-grade" name="collateral-grade" class="mt-1 block w-full p-3 border border-gray-300 rounded-md">
+                    <option value="A">Collateral A</option>
+                    <option value="B">Collateral B</option>
+                    <option value="C">Collateral C</option>
+                </select>
+            </div>
+            <!-- Income Method -->
+            <div>
+                <label for="income-method" class="block text-sm font-medium text-gray-700">Income Method</label>
+                <select id="income-method" name="income-method" class="mt-1 block w-full p-3 border border-gray-300 rounded-md">
+                    <option value="Formal">Formal</option>
+                    <option value="Surrogate">Surrogate</option>
+                    <option value="Banking">Banking</option>
+                    <option value="LIP">LIP</option>
+                    <option value="AIP">AIP</option>
+                </select>
+            </div>
+            <!-- Profile Type -->
+            <div>
+                <label for="profile-type" class="block text-sm font-medium text-gray-700">Profile Type</label>
+                <select id="profile-type" name="profile-type" class="mt-1 block w-full p-3 border border-gray-300 rounded-md">
+                    <option value="Normal">Normal Profile</option>
+                    <option value="Samartya">Samartya Profile</option>
+                </select>
+            </div>
+            <!-- CIBIL Score -->
+            <div>
+                <label for="cibil-score" class="block text-sm font-medium text-gray-700">CIBIL Score</label>
+                <input type="number" id="cibil-score" name="cibil-score" placeholder="Enter CIBIL score" class="mt-1 block w-full p-3 border border-gray-300 rounded-md" required>
+            </div>
+            <!-- Transaction Type -->
+            <div>
+                <label for="transaction-type" class="block text-sm font-medium text-gray-700">Transaction Type</label>
+                <select id="transaction-type" name="transaction-type" class="mt-1 block w-full p-3 border border-gray-300 rounded-md">
+                    <option value="None">None</option>
+                    <option value="Plot_loans">Plot loans, Plot + Construction loans (+0.50%)</option>
+                    <option value="HL_HE_loans">HL+HE loans, HE loan (+0.25%)</option>
+                    <option value="CRE_pricing">CRE pricing (+0.50%)</option>
+                    <option value="AP_Project">Approved Project AP (+2%)</option>
+                    <option value="TS_Project">Approved Project TS (+1%)</option>
+                    <option value="Akola_Collateral">Akola Collateral (+0.5%)</option>
+                    <option value="Rajasthan_Funding">Rajasthan Collateral Funding (14%)</option>
+                    <option value="HL_SAARTHI_ABB_deviation">HL SAARTHI ABB deviation (+2%)</option>
+                    <option value="HL_Cash_Profit_ABB_deviation">HL Cash Profit ABB deviation (+1%)</option>
+                    <option value="Lal_Dora">NCR Lal Dora Property (12%)</option>
+                    <option value="IMGC_Piramal">IMGC/Piramal Gruh setu (+1%)</option>
+                </select>
+            </div>
+            <!-- Calculate Button -->
+            <div class="flex justify-center">
+                <button type="button" id="calculate-btn" class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition">Calculate ROI</button>
+            </div>
+        </form>
+        <!-- Result -->
+        <div id="result-box" class="mt-8 p-6 bg-green-50 rounded-lg shadow-md border-2 border-green-200" style="display: none;">
+            <h2 class="text-xl font-bold text-green-700 mb-4 text-center">ROI Result</h2>
+            <div class="space-y-2 text-lg">
+                <p><strong>Card Rate:</strong> <span id="card-rate-display"></span></p>
+                <p><strong>CIBIL Adjustment:</strong> <span id="cibil-adjustment-display"></span></p>
+                <p><strong>Special Adjustment:</strong> <span id="special-adjustment-display"></span></p>
+                <hr class="border-t-2 border-green-300 my-2">
+                <p class="font-bold text-xl"><strong>Final ROI:</strong> <span id="final-roi"></span></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        // City Tier Map (full list)
+        const cityTierMap = {
+            "Agra": "C", "Mathura": "D", "Etawah": "D", "Hathras": "E", "Asifabad": "C",
+            "Ahmedabad - CG Road": "A", "Ahmedabad - Nava Naroda": "A", "Kalol": "B", "Beed": "C",
+            "Ahmednagar": "D", "Shrirampur": "D", "Daund": "E", "Sangamner": "E", "Aligarh": "C",
+            "Bulandsahar": "D", "Amravati": "C", "Akola": "D", "Yavatmal": "E", "Amritsar": "C",
+            "Jammu": "C", "Pathankot": "C", "Aurangabad": "C", "Jalna": "E", "Aurangabad - Kannad": "C",
+            "Sillod": "E", "Avadi": "A", "Ponneri": "C", "Tiruvallur": "C", "Bareilly": "C",
+            "Moradabad": "C", "Bijnor": "D", "Budaun": "E", "Bathinda": "D", "Muktsar": "E",
+            "Ferozepur": "D", "Abohar": "C", "Belgaum": "D", "Gokak": "E", "Chikkodi": "E",
+            "Bengaluru - Jayanagar": "A", "Bengaluru - Kengeri": "A", "Kanakapura": "C", "Bengaluru - Marathahalli": "A",
+            "Kolar": "C", "Bengaluru - Hoskote": "B", "Bengaluru - Vasanth Nagar 2": "A", "Bengaluru - Museum Road": "A",
+            "Bengaluru - Nelamangala": "B", "Bengaluru - Rajaji Nagar": "A", "Chikkaballapur - MG Road": "C", "Bengaluru - Vasanth Nagar": "A",
+            "Bengaluru - Kormangala": "A", "Bengaluru - Yelahanka": "A", "Tumkur": "C", "Bhilwara": "D",
+            "Chittorgarh": "E", "Pratapgarh": "E", "Bhopal": "B", "Mandideep": "B", "Itarsi": "D",
+            "Vidisha": "E", "Sagar": "D", "Bhubaneswar": "B", "Ganjam - Berhampur": "D", "Cuttack - Link Road": "D",
+            "Puri": "D", "Sambhalpur": "D", "Baleswar": "D", "Bhadrak": "E", "Bijapur": "C",
+            "Mudhol": "E", "Bagalkot": "D", "Athani": "E", "Hanumangarh": "E", "Sriganganagar": "D",
+            "Bikaner": "E", "Nokha": "E", "Thane - Palghar": "C", "Mumbai - Boisar": "C", "Pusad": "E",
+            "Washim": "E", "Buldhana": "E", "Burari": "A", "Chandigarh - Sector 22": "B", "Rupnagar": "C",
+            "Solan": "D", "Chennai - Kodambakkam": "A", "Chennai - Kilpauk": "A", "Ambatur": "A",
+            "Chennai - North Boag Road": "A", "Tiruvottiyur": "A", "Chennai - Porur": "A", "Chennai - Nanganallur": "A",
+            "Chennai - Tambaram": "A", "Chengalpattu": "C", "Kelambakkam": "B", "Coimbatore": "B",
+            "Pollachi": "D", "Sulur": "D", "Davangere": "C", "Chitradurga": "D", "Bellary": "C",
+            "Ranebennur": "E", "Dehradun": "B", "Vikasnagar": "C", "Rishikesh": "C", "Delhi - Dwarka": "A",
+            "Delhi - Jhandewalan": "A", "Delhi - Narela": "A", "Delhi - Pitampura": "A", "Delhi - Peeragarhi": "A",
+            "Delhi - Rohini": "A", "Delhi - Shahdara": "A", "Loni": "A", "Dindigul": "D", "Theni": "E",
+            "Karaikudi": "E", "Burdwan": "D", "Durgapur": "D", "Asansol": "C", "Bankura": "E",
+            "Erode": "C", "Namakkal": "E", "Karur": "D", "Delhi - Kalkaji": "A", "Faridabad - NIT": "A",
+            "Faridabad": "A", "Delhi - Chattarpur": "A", "Ghaziabad": "A", "Ghaziabad - Raj Nagar": "A",
+            "Gorakhpur": "D", "Basti": "C", "Deoria": "D", "Guntur": "C", "Guntur - Narasaraopeta": "E",
+            "Chirala": "E", "Ongole": "E", "Gurugram - Udyog Vihar": "A", "Bahadurgarh": "B", "Gurgaon - MG Road": "A",
+            "Rewari - Brass Market": "D", "Gurugram - Sohna Road": "A", "Palwal": "E", "Guwahati": "C",
+            "Siliguri": "D", "Dibrugarh": "D", "Nalbari": "D", "Jorhat": "E", "Agartala": "C",
+            "Tezpur": "D", "Silchar": "C", "Gwalior": "D", "Jhansi": "C", "Shivpuri": "E",
+            "Guna": "D", "Haldwani": "D", "Rudrapur": "C", "Kashipur": "D", "Haridwar": "D",
+            "Saharanpur": "D", "Roorkee": "D", "Hosur": "B", "Hennur": "A", "Bengaluru - Electronic City": "A",
+            "Serampore": "B", "Howrah": "A", "Kharagpur": "E", "Hubballi": "C", "Hospet": "E",
+            "Haveri": "E", "Gadag": "E", "Dharwad": "D", "Hyderabad - Ameerpet Main": "A", "Secunderabad- Clock Tower": "A",
+            "Hyderabad - Himayat Nagar": "A", "Hyderabdad - Attapur": "A", "Hyderabad - Kukatpally": "A", "Malkajgiri - Kompally": "A",
+            "Hyderabad - Nagole": "A", "Hyderabad - A S Rao Nagar": "A", "Ibrahimpatnam": "D", "Indore - MG Road": "B",
+            "Indore - Vijay Nagar": "B", "Ujjain": "D", "Ratlam": "E", "Dewas": "D", "Mandsaur": "D",
+            "Shujalpur": "C", "Jabalpur": "C", "Rewa": "C", "Chhindwara": "E", "Satna": "D",
+            "Shahdol": "E", "Jaipur - Jagatpura": "B", "Beawar": "E", "Ajmer": "C", "Jaipur - Kalwar Road": "B",
+            "Bharatpur": "D", "Kishangarh": "E", "Jaipur - Tonk Road": "B", "Dausa": "D", "Bhiwadi": "D",
+            "Alwar": "D", "Jaipur - MI Road": "B", "Jaipur - Ajmer Road": "B", "Jalandhar": "C", "Gurdaspur": "C",
+            "Hoshiarpur": "D", "Jalgaon": "D", "Chaalisgaon": "D", "Dhule": "D", "Shirpur": "E",
+            "Nandurbar": "E", "Jamnagar": "C", "Junagadh": "D", "Jetpur": "E", "Bhuj": "E",
+            "Gandhidham": "E", "Anekal": "A", "Nagaur": "E", "Jodhpur": "D", "Balotra": "E",
+            "Jalor": "E", "Phalodi": "E", "Kalburgi": "D", "Raichur": "C", "Shahapur - Yadgir": "C",
+            "Bidar": "D", "Basavakalyan": "E", "Mumbai - Kandivali": "A", "Mumbai - Andheri": "A", "Mumbai - Borivali": "A",
+            "Mumbai - Dahisar": "A", "Kanpur": "C", "Kanpur - Mati": "D", "Karim Nagar": "C", "Mancherial": "D",
+            "Siddhipet": "D", "Karnal": "D", "Kaithal": "E", "Jind": "E", "Kochi": "B",
+            "Aluva": "C", "Tripunithura": "C", "Kolhapur": "C", "Satara": "D", "Sangli": "C",
+            "Ratnagiri": "D", "Panjim": "C", "Kolkata - Rashbehari": "A", "Barasat": "C", "Kolkata - Shakespeare Sarani": "A",
+            "Ranaghat": "D", "Garia": "B", "Kota": "C", "Bundi": "D", "Jhalawar": "E",
+            "Baran": "E", "Alleppey": "D", "Kottayam": "D", "Mavelikara": "E", "Thodupuzha": "E",
+            "Kanjirapally": "D", "Kannur": "E", "Kozhikode": "E", "Kasaragod": "E", "Manjeri": "E",
+            "Kumbakonam": "D", "Tiruvarur": "E", "Mayiladuthurai": "E", "Ariyalur": "E", "Anantapur": "D",
+            "Kurnool": "D", "Adoni": "D", "Nandyal": "E", "Kadappa": "D", "Dharmavaram": "E",
+            "Lucknow - Gomti Nagar": "B", "Sitapur": "E", "Hardoi - Lucknow Road": "D", "Sahjahanpur": "D",
+            "LUCKNOW - MMM MARG": "B", "Faizabad": "D", "Amethi": "D", "Lucknow - PGI": "B", "Gonda": "D",
+            "Rae Bareilly": "D", "Ambedkar Nagar": "D", "Ludhiana": "C", "Khanna": "D", "Moga": "D",
+            "Madurai": "B", "Ramanathapuram - Paramakudi": "D", "Melur": "E", "Mahabubnagar": "D", "Nagarkurnool": "D",
+            "Gadwal": "E", "Udupi": "D", "Mangaluru": "D", "Chickmaglur": "E", "Puttur": "E",
+            "Meerut": "C", "Muzaffarnagar - Bhopa Road": "C", "Hapur": "D", "Modinagar": "C", "Palanpur": "E",
+            "Himmatnagar": "E", "Mehsana": "E", "Patan": "E", "Mumbai - Nallasopara": "A", "Mumbai - Mira Bhayandar": "A",
+            "Patiala - Zirakpur": "B", "Mohali - Sector 66": "B", "Mumbai - Bandra": "A", "Mumbai - Goregaon": "A",
+            "Mysuru - Saraswathipuram": "B", "Mysuru - Chamrajpura": "D", "Mandya": "E", "Kushalanagara": "E",
+            "Ramanagar": "B", "Chamrajnagar": "D", "Nagarkoil": "C", "Marthandam": "D", "Thiruchendur": "E",
+            "Vallioor": "D", "Nagpur": "B", "Bhandara": "D", "Nagpur - Katol": "E", "Chandrapur": "C",
+            "Nagpur - Butibori": "C", "Wardha": "E", "Nalgonda": "D", "Suryapet - K.K.Road": "D", "Nanded": "D",
+            "Pandharpur": "E", "Parbhani": "D", "Narolgam": "A", "Sanand": "B", "Nashik - College Road": "B",
+            "Sinnar": "D", "Satana": "E", "Nashik - SG Link Road": "B", "Malegaon": "E", "Navi Mumbai - Karjat": "C",
+            "Navi Mumbai - Khopoli": "C", "Thane - Badlapur": "A", "Navi Mumbai - Kharghar": "A", "Navi Mumbai - Panvel": "A",
+            "Navi Mumbai - Roha": "D", "Raigad - Mahad": "E", "Navi Mumbai - Pen": "C", "Navi Mumbai - Vashi": "A",
+            "Navi Mumbai - Belapur CBD": "A", "Navi Mumbai - Ulwe": "A", "Tirupati": "C", "Nellore": "D",
+            "Chittoor": "D", "Madanapalle": "E", "Nizamabad": "C", "Kamareddy - Bus Stand Road": "D", "Adilabad - Nirmal": "E",
+            "Korutla": "D", "Noida - Sector 2": "A", "Delhi - Laxmi Nagar": "A", "Noida - WTT": "A", "Greater Noida": "A",
+            "Panipat": "D", "Sonepat": "D", "Patiala": "C", "Barnala": "D", "Sangrur": "D",
+            "Rajpura": "C", "Patna": "C", "Muzaffarpur - Ramna": "D", "Motihari": "E", "Gaya": "C",
+            "Darbhanga": "E", "Dhanbad - Bank More": "D", "Bhagalpur": "E", "Ranchi": "C", "Jamshedpur": "C",
+            "Pithampur": "E", "Khargone": "D", "Khandwa": "E", "Dhar": "E", "Prayagraj": "D",
+            "Mirzapur": "C", "Puducherry": "C", "Cudallore": "D", "Villupuram": "D", "Tiruvannamalai": "D",
+            "Pune - Alandi": "A", "Pune - Chakan": "B", "Pune - Bibvewadi": "A", "Pune - Fursungi": "A",
+            "Baramati": "E", "Pune - Pimpri": "A", "Pune - Talegaon": "B", "Pune - Shivaji nagar": "A",
+            "Pune - Uruli Kanchan": "C", "Pune - Wagholi": "B", "Raipur": "B", "Durg - Bhilai Power House": "C",
+            "Rajim": "C", "Bilaspur": "C", "Baloda Bazar": "C", "Rajahmundry": "D", "West Godavari - Bhimavaram": "D",
+            "Kakinada": "D", "Tuni": "E", "Amalapuram": "E", "Rajkot": "B", "Bhavnagar": "C",
+            "Botad": "E", "Morbi": "D", "Amreli": "E", "Surendranagar": "D", "Ramachandrapuram": "A",
+            "Sangareddy": "D", "Hyderabad - Vikarabad": "D", "Rohtak": "D", "Bhiwani": "D", "Hisar": "D",
+            "Sirsa": "E", "Salem": "C", "Dharmapuri": "D", "Krishnagiri": "E", "Attur": "E",
+            "Hassan": "C", "Arsikere": "D", "Shivamoga": "D", "Sikar": "C", "Jhunjhunu": "D",
+            "Kuchamancity": "E", "Neem ka Thana": "D", "Solapur": "D", "Latur": "C", "Osmanabad": "D",
+            "Vapi": "D", "Surat - Adajan": "B", "Valsad": "D", "Surat - Majura Gate": "B", "Navsari": "C",
+            "Thane - Dombivli": "A", "Thane - Kalyan": "A", "Thane - Ambernath": "A", "Thane - Shahapur": "C",
+            "Thane - Naupada": "A", "Thane - Bhiwandi": "A", "Thane - Lake City Mall": "A", "Thane - Ghodbunder Road": "A",
+            "Thirunelveli": "C", "Tuticorin": "D", "Tenkasi - Mattappa Street": "E", "Palakkad": "D", "Thrissur": "D",
+            "Kunnamkulam": "D", "Irinjalakuda": "D", "Tiruppur": "D", "Sathyamangalam": "E", "Udumelpet": "E",
+            "Mettupalyam": "E", "Dharapuram": "D", "Trichy": "C", "Tanjore": "E", "Pudukkottai - Santhanathapuram": "E",
+            "Trivandrum": "B", "Kollam": "E", "Pathnamthitta": "E", "Udaipur": "C", "Dungarpur": "E",
+            "Banswara": "E", "Rajsamand": "E", "Pali": "E", "Sirohi": "C", "Vadodara": "B",
+            "Bharuch": "D", "Halol": "E", "Kheda": "D", "Anand": "D", "Varanasi": "C",
+            "Jaunpur": "D", "Azamgarh": "D", "Ballia": "D", "Mumbai - Vasai West": "A", "Mumbai - Vasai East": "A",
+            "Thirupattur": "D", "Kanchipuram - VP Street": "C", "Vellore": "C", "Vijayawada": "B", "Kanuru - Vijayawada": "B",
+            "Eluru": "D", "Krishna - Machilipatnam": "E", "Nandigama": "E", "Gudivada": "D", "Mumbai - Virar East": "A",
+            "Mumbai - Virar West": "A", "Virudhunagar": "D", "Rajapalayam": "D", "Sivakasi": "E", "Kovilpatti": "E",
+            "Vishakhapatnam": "B", "Vizianagaram": "D", "Srikakulam": "D", "Anakapalle": "D", "Gajuwaka": "D",
+            "Warangal": "C", "Kothagudem": "E", "Jangaon": "E", "Khammam": "D", "Mahabubabad": "E",
+            "Yamuna Vihar": "A", "Kurukshetra": "D", "Yamunanagar": "D", "Ambala": "D", "Shahpura": "D"
+        };
+
+        // Auto detect city tier
+        document.getElementById('city').addEventListener('input', function() {
+            const city = this.value.trim();
+            document.getElementById('city-tier').value = cityTierMap[city] || '';
+        });
+
+        // Auto detect loan parameter
+        document.getElementById('loan-amount').addEventListener('input', function() {
+            const amt = parseInt(this.value, 10);
+            let param = '';
+            if (amt <= 1500000) param = 'Budget';
+            else if (amt > 1500000 && amt <= 3500000) param = 'Affordable';
+            else if (amt > 3500000) param = 'Mass Affluent';
+            document.getElementById('loan-param').value = param;
+        });
+
+
+       // Data for ROI rates
+        const roiRates = {
+            'A': {
+                'Mass Affluent': {
+                    'Formal': { 'A': 12.10, 'B': 12.25, 'C': 12.35, 'D': 12.60, 'E': 12.85 },
+                    'Surrogate': { 'A': 11.10, 'B': 11.25, 'C': 11.35, 'D': 11.60, 'E': 11.85 },
+                    'Banking': { 'A': 10.85, 'B': 11.00, 'C': 11.35, 'D': 11.60, 'E': 11.85 },
+                    'LIP': { 'A': 11.60, 'B': 11.75, 'C': 11.85, 'D': 12.10, 'E': 12.35 },
+                    'AIP': { 'A': 12.25, 'B': 12.40, 'C': 12.75, 'D': 13.00, 'E': 13.25 },
+                },
+                'Affordable': {
+                    'Formal': { 'A': 13.35, 'B': 13.50, 'C': 13.60, 'D': 13.85, 'E': 14.10 },
+                    'Surrogate': { 'A': 12.35, 'B': 12.50, 'C': 12.60, 'D': 12.85, 'E': 13.10 },
+                    'Banking': { 'A': 12.10, 'B': 12.25, 'C': 12.60, 'D': 12.85, 'E': 13.10 },
+                    'LIP': { 'A': 12.45, 'B': 12.60, 'C': 12.70, 'D': 12.95, 'E': 13.20 },
+                    'AIP': { 'A': 12.25, 'B': 12.40, 'C': 12.75, 'D': 13.00, 'E': 13.25 },
+                    'Samarthya_AIP': { 'A': 14.60, 'B': 14.75, 'C': 14.85, 'D': 15.10, 'E': 15.35 },
+                    'Samarthya_Outside_AIP': { 'A': 13.85, 'B': 14.00, 'C': 14.10, 'D': 14.35, 'E': 14.60 },
+                    'HL_Saarthi_Plus_Cash_Salary': { 'A': 15.00, 'B': 15.00, 'C': 15.00, 'D': 15.25, 'E': 15.50 },
+                },
+                'Budget': {
+                    'Formal': { 'A': 13.35, 'B': 13.50, 'C': 13.60, 'D': 13.85, 'E': 14.10 },
+                    'Surrogate': { 'A': 13.35, 'B': 13.50, 'C': 13.60, 'D': 13.85, 'E': 14.10 },
+                    'Banking': { 'A': 13.10, 'B': 13.25, 'C': 13.60, 'D': 13.85, 'E': 14.10 },
+                    'AIP': { 'A': 13.50, 'B': 13.65, 'C': 13.75, 'D': 14.00, 'E': 14.25 },
+                    'Samarthya_AIP': { 'A': 14.60, 'B': 14.75, 'C': 14.85, 'D': 15.10, 'E': 15.35 },
+                    'Samarthya_Outside_AIP': { 'A': 13.85, 'B': 14.00, 'C': 14.10, 'D': 14.35, 'E': 14.60 },
+                    'HL_SAARTHI_Cash_Salaried': { 'A': 15.25, 'B': 15.50, 'C': 15.75, 'D': 16.00, 'E': 16.25 },
+                }
+            },
+            'B': {
+                'Mass Affluent': {
+                    'Formal': { 'A': 12.40, 'B': 12.65, 'C': 12.75, 'D': 13.00, 'E': 13.25 },
+                    'Surrogate': { 'A': 11.40, 'B': 11.65, 'C': 11.75, 'D': 12.00, 'E': 12.25 },
+                    'Banking': { 'A': 11.15, 'B': 11.40, 'C': 11.75, 'D': 12.00, 'E': 12.25 },
+                    'LIP': { 'A': 11.90, 'B': 12.15, 'C': 12.25, 'D': 12.50, 'E': 12.75 },
+                    'AIP': { 'A': 13.25, 'B': 13.20, 'C': 13.55, 'D': 13.80, 'E': 14.05 },
+                },
+                'Affordable': {
+                    'Formal': { 'A': 13.95, 'B': 14.30, 'C': 14.40, 'D': 14.65, 'E': 14.90 },
+                    'Surrogate': { 'A': 12.95, 'B': 13.30, 'C': 13.40, 'D': 13.65, 'E': 13.90 },
+                    'Banking': { 'A': 12.70, 'B': 13.05, 'C': 13.40, 'D': 13.65, 'E': 13.90 },
+                    'LIP': { 'A': 13.05, 'B': 13.40, 'C': 13.50, 'D': 13.75, 'E': 14.00 },
+                    'AIP': { 'A': 13.10, 'B': 13.20, 'C': 13.55, 'D': 13.80, 'E': 14.05 },
+                    'Samarthya_AIP': { 'A': 15.20, 'B': 15.55, 'C': 15.65, 'D': 15.90, 'E': 16.15 },
+                    'Samarthya_Outside_AIP': { 'A': 14.60, 'B': 14.80, 'C': 14.90, 'D': 15.15, 'E': 15.40 },
+                    'HL_Saarthi_Plus_Cash_Salary': { 'A': 15.25, 'B': 15.25, 'C': 15.25, 'D': 15.50, 'E': 15.75 },
+                },
+                'Budget': {
+                    'Formal': { 'A': 13.95, 'B': 14.30, 'C': 14.40, 'D': 14.65, 'E': 14.90 },
+                    'Surrogate': { 'A': 13.95, 'B': 14.30, 'C': 14.40, 'D': 14.65, 'E': 14.90 },
+                    'Banking': { 'A': 13.70, 'B': 14.05, 'C': 14.40, 'D': 14.65, 'E': 14.90 },
+                    'AIP': { 'A': 13.85, 'B': 14.20, 'C': 14.55, 'D': 14.80, 'E': 15.05 },
+                    'Samarthya_AIP': { 'A': 15.20, 'B': 15.55, 'C': 15.65, 'D': 15.90, 'E': 16.15 },
+                    'Samarthya_Outside_AIP': { 'A': 14.60, 'B': 14.80, 'C': 14.90, 'D': 15.15, 'E': 15.40 },
+                    'HL_SAARTHI_Cash_Salaried': { 'A': 15.25, 'B': 15.50, 'C': 15.75, 'D': 16.00, 'E': 16.25 },
+                }
+            },
+            'C': {
+                'Mass Affluent': {
+                    'Formal': { 'A': 12.40, 'B': 12.65, 'C': 12.75, 'D': 13.00, 'E': 13.25 },
+                    'Surrogate': { 'A': 11.40, 'B': 11.65, 'C': 11.75, 'D': 12.00, 'E': 12.25 },
+                    'Banking': { 'A': 11.40, 'B': 11.65, 'C': 11.75, 'D': 12.00, 'E': 12.25 },
+                    'LIP': { 'A': 11.90, 'B': 12.15, 'C': 12.25, 'D': 12.50, 'E': 12.75 },
+                    'AIP': { 'A': 13.50, 'B': 13.45, 'C': 13.55, 'D': 13.80, 'E': 14.05 },
+                },
+                'Affordable': {
+                    'Formal': { 'A': 13.95, 'B': 14.30, 'C': 14.40, 'D': 14.65, 'E': 14.90 },
+                    'Surrogate': { 'A': 12.95, 'B': 13.30, 'C': 13.40, 'D': 13.65, 'E': 13.90 },
+                    'Banking': { 'A': 12.95, 'B': 13.30, 'C': 13.40, 'D': 13.65, 'E': 13.90 },
+                    'LIP': { 'A': 13.05, 'B': 13.40, 'C': 13.50, 'D': 13.75, 'E': 14.00 },
+                    'AIP': { 'A': 13.35, 'B': 13.45, 'C': 13.55, 'D': 13.80, 'E': 14.05 },
+                    'Samarthya_AIP': { 'A': 15.20, 'B': 15.55, 'C': 15.65, 'D': 15.90, 'E': 16.15 },
+                    'Samarthya_Outside_AIP': { 'A': 14.60, 'B': 14.80, 'C': 14.90, 'D': 15.15, 'E': 15.40 },
+                    'HL_Saarthi_Plus_Cash_Salary': { 'A': 15.25, 'B': 15.25, 'C': 15.25, 'D': 15.50, 'E': 15.75 },
+                },
+                'Budget': {
+                    'Formal': { 'A': 13.95, 'B': 14.30, 'C': 14.40, 'D': 14.65, 'E': 14.90 },
+                    'Surrogate': { 'A': 13.95, 'B': 14.30, 'C': 14.40, 'D': 14.65, 'E': 14.90 },
+                    'Banking': { 'A': 13.95, 'B': 14.30, 'C': 14.40, 'D': 14.65, 'E': 14.90 },
+                    'AIP': { 'A': 14.10, 'B': 14.45, 'C': 14.55, 'D': 14.80, 'E': 15.05 },
+                    'Samarthya_AIP': { 'A': 15.20, 'B': 15.55, 'C': 15.65, 'D': 15.90, 'E': 16.15 },
+                    'Samarthya_Outside_AIP': { 'A': 14.60, 'B': 14.80, 'C': 14.90, 'D': 15.15, 'E': 15.40 },
+                    'HL_SAARTHI_Cash_Salaried': { 'A': 15.25, 'B': 15.50, 'C': 15.75, 'D': 16.00, 'E': 16.25 },
+                }
+            }
+        };
+            
+
+            // CIBIL adjustment logic
+            if (cibil > 770) cibilAdj = -0.10;
+            else if (cibil >= 700 && cibil <= 740) cibilAdj = 0.20;
+            else if (cibil < 700) cibilAdj = 0.40;
+
+            // Special condition for budget loan <= 7.5 lakh
+            if (loanParam === 'Budget' && loanAmt <= 750000) specialAdj += 0.50;
+
+            // Transaction type adjustment (demo)
+            if (transaction === 'Plot_loans') specialAdj += 0.50;
+            if (transaction === 'HL_HE_loans') specialAdj += 0.25;
+            if (transaction === 'CRE_pricing') specialAdj += 0.50;
+            if (transaction === 'AP_Project') specialAdj += 2.00;
+            if (transaction === 'TS_Project') specialAdj += 1.00;
+            if (transaction === 'Akola_Collateral') specialAdj += 0.50;
+            if (transaction === 'Rajasthan_Funding') { cardRate = 14.00; specialAdj = 0; }
+            if (transaction === 'HL_SAARTHI_ABB_deviation') specialAdj += 2.00;
+            if (transaction === 'HL_Cash_Profit_ABB_deviation') specialAdj += 1.00;
+            if (transaction === 'Lal_Dora') { cardRate = 12.00; specialAdj = 0; }
+            if (transaction === 'IMGC_Piramal') specialAdj += 1.00;
+
+            // Final ROI
+            let finalRoi = cardRate + cibilAdj + specialAdj;
+
+            // Show result
+            document.getElementById('card-rate-display').textContent = cardRate.toFixed(2) + '%';
+            document.getElementById('cibil-adjustment-display').textContent = (cibilAdj >= 0 ? '+' : '') + cibilAdj.toFixed(2) + '%';
+            document.getElementById('special-adjustment-display').textContent = (specialAdj >= 0 ? '+' : '') + specialAdj.toFixed(2) + '%';
+            document.getElementById('final-roi').textContent = finalRoi.toFixed(2) + '%';
+            document.getElementById('result-box').style.display = 'block';
+        };
+    </script>
+</body>
+</html>
